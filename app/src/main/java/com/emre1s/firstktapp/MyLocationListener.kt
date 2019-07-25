@@ -34,7 +34,7 @@ class MyLocationListener (
     private val context: Context,
     private val lifecycle: Lifecycle,
     private val callback: (Location) -> Unit,
-    private val addressCallback: (String) -> Unit
+    private val addressCallback: (String, Location) -> Unit
     ) {
 
     private var fusedLocationClient : FusedLocationProviderClient
@@ -55,6 +55,7 @@ class MyLocationListener (
 
     private var enabled = false
 
+
     init {
         val observer = ObserveMain()
 //        while (fusedLocationClient == null) {
@@ -68,7 +69,10 @@ class MyLocationListener (
                 locationResult ?: return
                 for (location in locationResult.locations) {
                     callback(location)
-                    Log.d("Emre1s NEW", "New latitude is : ${location.latitude} and new longitude is ${location.longitude}")
+                    lastKnownLocation = location
+                    startIntentService()
+                    Log.d("Emre1s NEW", "New latitude is : " +
+                            "${location.latitude} and new longitude is ${location.longitude}")
                 }
             }
         }
@@ -96,6 +100,7 @@ class MyLocationListener (
             task.addOnFailureListener { exception ->
                 if (exception is ResolvableApiException) {
                     try {
+                        Log.d("Emre1s", "This part of code called the REQUEST")
                         exception.startResolutionForResult(context as MainActivity, REQUEST_CHECK_SETTINGS)
                     } catch (sendEx: IntentSender.SendIntentException) {
 
@@ -148,21 +153,21 @@ class MyLocationListener (
 
                 override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
                     super.onPermissionsChecked(report)
-                    if (report?.areAllPermissionsGranted() == true) {
-                        allPermissionsGranted = true
-                        task = client.checkLocationSettings(builder.build())
-                        task.addOnSuccessListener {
-                            startLocationUpdates() } //getCurrentLocation()
-                        task.addOnFailureListener { exception ->
-                            if (exception is ResolvableApiException) {
-                                try {
-                                    exception.startResolutionForResult(context, REQUEST_CHECK_SETTINGS)
-                                } catch (sendEx: IntentSender.SendIntentException) {
-
-                                }
-                            }
-                        }
-                    }
+//                    if (report?.areAllPermissionsGranted() == true) {
+//                        allPermissionsGranted = true
+//                        task = client.checkLocationSettings(builder.build())
+//                        task.addOnSuccessListener {
+//                            startLocationUpdates() } //getCurrentLocation()
+//                        task.addOnFailureListener { exception ->
+//                            if (exception is ResolvableApiException) {
+//                                try {
+//                                    exception.startResolutionForResult(context, REQUEST_CHECK_SETTINGS)
+//                                } catch (sendEx: IntentSender.SendIntentException) {
+//
+//                                }
+//                            }
+//                        }
+//                    }
                 }
 
                 override fun onPermissionRationaleShouldBeShown(
@@ -181,7 +186,7 @@ class MyLocationListener (
             val addressOutput = resultData?.getString(Constants.RESULT_DATA_KEY) ?: ""
             Log.d("Emre1s", addressOutput)
             if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-                addressCallback(addressOutput)
+                addressCallback(addressOutput, lastKnownLocation ?: Location("abc"))
             }
             //tv_address.text = addressOutput
         }
@@ -202,7 +207,7 @@ class MyLocationListener (
         if (allPermissionsGranted) {
             fusedLocationClient!!.lastLocation
                 .addOnSuccessListener { location: Location? ->
-                    lastKnownLocation = location
+//                    lastKnownLocation = location
 //                    startIntentService()
                     if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
                         callback(location ?: Location("abc"))
@@ -229,7 +234,7 @@ class MyLocationListener (
 
     fun findLocation() {
         Toast.makeText(context, "Location updated!", Toast.LENGTH_SHORT).show()
-        //startLocationUpdates()
-        getCurrentLocation()
+        startLocationUpdates()
+       // getCurrentLocation()
     }
 }
