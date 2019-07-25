@@ -1,6 +1,7 @@
 package com.emre1s.firstktapp
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
@@ -41,6 +42,9 @@ class MyLocationListener (
     private var client: SettingsClient
     private var builder: LocationSettingsRequest.Builder
 
+    private var locationCallback: LocationCallback
+    private var locationRequest: LocationRequest?
+
     var allPermissionsGranted: Boolean = false
 
     val REQUEST_CHECK_SETTINGS = 2
@@ -58,7 +62,16 @@ class MyLocationListener (
 //        }
        fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
-        val locationRequest: LocationRequest? = createLocationRequest()
+        locationRequest = createLocationRequest()
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult?) {
+                locationResult ?: return
+                for (location in locationResult.locations) {
+                    callback(location)
+                    Log.d("Emre1s NEW", "New latitude is : ${location.latitude} and new longitude is ${location.longitude}")
+                }
+            }
+        }
 
         builder = LocationSettingsRequest.Builder()
             .addLocationRequest(locationRequest!!)
@@ -78,7 +91,8 @@ class MyLocationListener (
 
     fun start() {
         if (enabled) {
-            task.addOnSuccessListener { getCurrentLocation() }
+            task.addOnSuccessListener {
+                startLocationUpdates() } //getCurrentLocation()
             task.addOnFailureListener { exception ->
                 if (exception is ResolvableApiException) {
                     try {
@@ -91,6 +105,15 @@ class MyLocationListener (
         }
     }
 
+    @SuppressLint("MissingPermission")
+    fun startLocationUpdates() {
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null )
+    }
+
+    fun stopLocationUpdates() {
+        fusedLocationClient.removeLocationUpdates(locationCallback)
+    }
+
     fun enable() {
         enabled = true
         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
@@ -100,6 +123,7 @@ class MyLocationListener (
 
     fun stop() {
         Log.d("Emre1s", "Disconnect")
+        stopLocationUpdates()
         //task.addOnSuccessListener {  }
         //task.addOnFailureListener {  }
     }
@@ -127,7 +151,8 @@ class MyLocationListener (
                     if (report?.areAllPermissionsGranted() == true) {
                         allPermissionsGranted = true
                         task = client.checkLocationSettings(builder.build())
-                        task.addOnSuccessListener { getCurrentLocation() }
+                        task.addOnSuccessListener {
+                            startLocationUpdates() } //getCurrentLocation()
                         task.addOnFailureListener { exception ->
                             if (exception is ResolvableApiException) {
                                 try {
@@ -204,6 +229,7 @@ class MyLocationListener (
 
     fun findLocation() {
         Toast.makeText(context, "Location updated!", Toast.LENGTH_SHORT).show()
+        //startLocationUpdates()
         getCurrentLocation()
     }
 }
