@@ -27,9 +27,6 @@ import com.karumi.dexter.listener.multi.BaseMultiplePermissionsListener
 import com.karumi.dexter.listener.multi.DialogOnAnyDeniedMultiplePermissionsListener
 import java.lang.ClassCastException
 
-class ObserveMain {
-
-}
 class MyLocationListener (
     private val context: Context,
     private val lifecycle: Lifecycle,
@@ -57,10 +54,7 @@ class MyLocationListener (
 
 
     init {
-        val observer = ObserveMain()
-//        while (fusedLocationClient == null) {
-//            fusedLocationClient = observer.createFusedLocationClient(context)
-//        }
+
        fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
         locationRequest = createLocationRequest()
@@ -127,6 +121,7 @@ class MyLocationListener (
     }
 
     fun stop() {
+        enabled = false
         Log.d("Emre1s", "Disconnect")
         stopLocationUpdates()
         //task.addOnSuccessListener {  }
