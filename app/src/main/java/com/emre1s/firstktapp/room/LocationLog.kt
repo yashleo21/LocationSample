@@ -5,8 +5,9 @@ import androidx.room.PrimaryKey
 import org.jetbrains.annotations.NotNull
 
 @Entity(tableName = "location_table")
-data class LocationLog(@PrimaryKey
+data class LocationLog(@PrimaryKey(autoGenerate = true)
                        @NotNull
+                       var key: Int,
                        val latitude: String,
                        val longitude: String,
                        val address: String)

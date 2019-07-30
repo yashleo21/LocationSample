@@ -18,11 +18,15 @@ class LocationViewModel(application: Application): AndroidViewModel(application)
         //Room initialization
         locationDao = LocationRoomDatabase.getDatabase(application).locationDao()
         repository = LocationRepository(locationDao)
-        allLocations =  locationDao.getAllLocations()
+        allLocations =  repository.allLocations
     }
 
     fun insert(locationLog: LocationLog) = viewModelScope.launch(Dispatchers.IO) {
         repository.insert(locationLog)
         Log.d("Emre1s", "Insertion successful")
+    }
+
+    fun deleteAll() = viewModelScope.launch(Dispatchers.IO) {
+        repository.delete()
     }
 }

@@ -9,4 +9,9 @@ class LocationRepository(private val locationDao: LocationDao) {
     suspend fun insert(locationLog: LocationLog) {
         locationDao.insert(locationLog)
     }
+
+    @WorkerThread
+    suspend fun delete() {
+        locationDao.deleteAll()
+    }
 }
